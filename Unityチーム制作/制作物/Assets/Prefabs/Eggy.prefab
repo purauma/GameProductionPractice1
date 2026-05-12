@@ -28,11 +28,11 @@ Transform:
   m_GameObject: {fileID: 536267905915165757}
   serializedVersion: 2
   m_LocalRotation: {x: 0.10941739, y: -0, z: -0, w: 0.9939959}
-  m_LocalPosition: {x: 0.027802229, y: 0.79899997, z: -1.3821144}
+  m_LocalPosition: {x: 0.027802229, y: 0.539, z: -1.3821144}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6414846317660713518}
+  m_Father: {fileID: 6414846317660713488}
   m_LocalEulerAnglesHint: {x: 12.563, y: 0, z: 0}
 --- !u!20 &947817152148587200
 Camera:
@@ -209,7 +209,7 @@ PrefabInstance:
     - {fileID: 9500000, guid: 0b9f20f2dc04f4b1b98f92fb30fd0393, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 400000, guid: 0b9f20f2dc04f4b1b98f92fb30fd0393, type: 3}
+    - targetCorrespondingSourceObject: {fileID: 400062, guid: 0b9f20f2dc04f4b1b98f92fb30fd0393, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6901815660066515375}
     m_AddedComponents:
@@ -226,9 +226,9 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 5430487021635478108}
   m_SourcePrefab: {fileID: 100100000, guid: 0b9f20f2dc04f4b1b98f92fb30fd0393, type: 3}
---- !u!4 &6414846317660713518 stripped
+--- !u!4 &6414846317660713488 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 400000, guid: 0b9f20f2dc04f4b1b98f92fb30fd0393, type: 3}
+  m_CorrespondingSourceObject: {fileID: 400062, guid: 0b9f20f2dc04f4b1b98f92fb30fd0393, type: 3}
   m_PrefabInstance: {fileID: 6414846317660842158}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &6414846317660745230 stripped
@@ -261,7 +261,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 80
+  m_Constraints: 112
   m_CollisionDetection: 0
 --- !u!135 &6052950755725603130
 SphereCollider:
@@ -282,8 +282,8 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Radius: 0.3
+  m_Center: {x: 0, y: 0.3, z: 0}
 --- !u!114 &7446674479360411465
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -298,7 +298,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_MoveSpeed: 5
   m_RotationSpeed: 5
-  m_JumpPow: 5
+  m_JumpPow: 3
 --- !u!95 &5430487021635478108
 Animator:
   serializedVersion: 7

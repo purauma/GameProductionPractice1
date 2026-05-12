@@ -14,13 +14,19 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float m_JumpPow = 5.0f;
 
+    [SerializeField]
+    private int PlayerHp = 1;
+
     private float moveY = 0f;
+
+    bool IsGround = false;
 
     private void Awake()
     {
         Debug.Log("Player Awake");
         rb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();   // Åöí«â¡
+
     }
 
     private void Update()
@@ -49,10 +55,12 @@ public class Player : MonoBehaviour
         anim.SetFloat("MoveSpeed", moveXZ.magnitude);
 
         // --- ÉWÉÉÉìÉv ---
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && IsGround)
         {
             moveY = m_JumpPow;
+            IsGround = false;   
         }
+
 
         // --- Rigidbody Ç…îΩâf ---
         rb.rotation = Quaternion.Euler(0, rotY, 0);
@@ -60,4 +68,17 @@ public class Player : MonoBehaviour
 
         moveY = 0f;
     }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            IsGround = true;
+        }
+    }
+
+
+
+
+
 }

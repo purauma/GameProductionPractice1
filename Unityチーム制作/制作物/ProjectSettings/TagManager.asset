@@ -7,6 +7,8 @@ TagManager:
   - Ground
   - DamageFloor
   - Take Damage
+  - TrapFloor
+  - Wall
   layers:
   - Default
   - TransparentFX

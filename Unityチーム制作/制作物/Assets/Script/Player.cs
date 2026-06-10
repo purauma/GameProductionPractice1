@@ -6,94 +6,98 @@ public class Player : MonoBehaviour
     private Rigidbody rb;
     private Animator anim;
 
-    [SerializeField]
-    private float m_MoveSpeed = 5.0f;
+    [SerializeField] private float MoveSpeed = 3.0f;
+    [SerializeField] private float RotationSpeed = 180f;
 
-    [SerializeField]
-    private float m_RotationSpeed = 5.0f;
+    [SerializeField] public int PlayerHp = 1;
 
-    [SerializeField]
-    private float m_JumpPow = 5.0f;
+    [SerializeField] private float jumpBufferTime = 0.2f; 
+    private float jumpBufferCounter = 0f;
 
-    [SerializeField]
-    public int PlayerHp = 1;
 
     private Vector3 respawnPoint;
-
-
-    private float moveY = 0f;
-
-    bool IsGround = false;
+    private bool IsGround = false;
     private bool isInvincible = false;
-    private float invincibleTime = 1.0f; // 無敵時間（1秒）
+    private float invincibleTime = 1.0f;
     private Renderer playerRenderer;
 
+    private bool isDead = false;
 
     private void Awake()
     {
-        Debug.Log("Player Awake");
         rb = GetComponent<Rigidbody>();
-        anim = GetComponent<Animator>();   // ★追加
+        anim = GetComponent<Animator>();
         respawnPoint = transform.position;
-        playerRenderer = GetComponentInChildren<Renderer>(); // ★モデルの見た目を取得
+        playerRenderer = GetComponentInChildren<Renderer>();
+
+        anim.applyRootMotion = false;
+        rb.freezeRotation = true; // 物理で倒れないように
     }
 
     private void Update()
     {
-        Vector3 moveXZ = Vector3.zero;
+        if (isDead) return;
 
-        // --- 回転 ---
-        float rotY = transform.localEulerAngles.y;
+        Move();
+        Rotate();
 
-        if (Input.GetKey(KeyCode.A))
-        {
-            rotY -= m_RotationSpeed;
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            rotY += m_RotationSpeed;
-        }
-
-        // --- 移動 ---
-        if (Input.GetKey(KeyCode.W))
-        {
-            moveXZ = transform.forward * m_MoveSpeed;
-        }
-
-        // --- Animator に移動量を送る（★これが無いと遷移しない） ---
-        anim.SetFloat("MoveSpeed", moveXZ.magnitude);
-
-        // --- ジャンプ ---
-        if (Input.GetKeyDown(KeyCode.Space) && IsGround)
-        {
-            moveY = m_JumpPow;
-            IsGround = false;   
-        }
-
-
-        // --- Rigidbody に反映 ---
-        rb.rotation = Quaternion.Euler(0, rotY, 0);
-       
-        rb.linearVelocity = new Vector3(moveXZ.x, rb.linearVelocity.y + moveY, moveXZ.z);
     
-        moveY = 0f;
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            jumpBufferCounter = jumpBufferTime;
+        }
+
+      
+        if (jumpBufferCounter > 0)
+        {
+            jumpBufferCounter -= Time.deltaTime;
+        }
+
+        if (jumpBufferCounter > 0 && IsGround)
+        {
+            Jump();
+            jumpBufferCounter = 0; 
+        }
+    }
+
+
+    private void Move()
+    {
+        float z = Input.GetAxis("Vertical");
+
+        Vector3 move = transform.forward * z * MoveSpeed * Time.deltaTime;
+        rb.MovePosition(rb.position + move);
+
+        anim.SetBool("Is Move", Mathf.Abs(z) > 0.1f);
+    }
+
+    private void Rotate()
+    {
+        float x = Input.GetAxis("Horizontal");
+
+        Quaternion deltaRot = Quaternion.Euler(0, x * RotationSpeed * Time.deltaTime, 0);
+        rb.MoveRotation(rb.rotation * deltaRot);
+    }
+
+    private void Jump()
+    {
+        rb.AddForce(Vector3.up * 5f, ForceMode.Impulse);
+        anim.SetTrigger("Jump");
+        IsGround = false;
     }
 
     public void TakeDamage(int damage)
     {
-        if (isInvincible) return; // ★無敵中はダメージ無効
+        if (isInvincible || isDead) return;
 
         PlayerHp -= damage;
-
-        StartCoroutine(DamageBlink()); // ★点滅開始
+        StartCoroutine(DamageBlink());
 
         if (PlayerHp <= 0)
         {
-            Respawn();
+            StartCoroutine(DeathProcess());
         }
     }
-
-
 
     private void OnCollisionEnter(Collision collision)
     {
@@ -104,18 +108,30 @@ public class Player : MonoBehaviour
 
         if (collision.gameObject.CompareTag("Take Damage"))
         {
-            TakeDamage(1);   //ダメージを与える
+            TakeDamage(1);
         }
     }
 
+    private IEnumerator DeathProcess()
+    {
+        isDead = true;
+
+        anim.SetTrigger("Death");
+        rb.velocity = Vector3.zero;
+
+        yield return new WaitForSeconds(2.0f);
+
+        Respawn();
+        isDead = false;
+    }
 
     private void Respawn()
     {
         DeathMarkerManager.Instance.CreateMarker(transform.position);
 
-        PlayerHp = 1;  // HP 回復
-        rb.linearVelocity = Vector3.zero;  // 速度リセット
-        transform.position = respawnPoint; // 初期位置へ戻す
+        PlayerHp = 1;
+        rb.velocity = Vector3.zero;
+        transform.position = respawnPoint;
     }
 
     private IEnumerator DamageBlink()
@@ -127,16 +143,12 @@ public class Player : MonoBehaviour
 
         while (timer < invincibleTime)
         {
-            playerRenderer.enabled = !playerRenderer.enabled; // ON/OFF 切り替え
+            playerRenderer.enabled = !playerRenderer.enabled;
             yield return new WaitForSeconds(blinkInterval);
             timer += blinkInterval;
         }
 
-        playerRenderer.enabled = true; // 最後に表示を戻す
+        playerRenderer.enabled = true;
         isInvincible = false;
     }
-
-
-
-
 }

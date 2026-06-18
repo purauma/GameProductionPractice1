@@ -31,7 +31,7 @@ public class Player : MonoBehaviour
         playerRenderer = GetComponentInChildren<Renderer>();
 
         anim.applyRootMotion = false;
-        rb.freezeRotation = true; // •¨—‚Å“|‚ê‚È‚¢‚æ‚¤‚É
+        rb.freezeRotation = true; // ï¿½ï¿½ï¿½ï¿½ï¿½Å“|ï¿½ï¿½È‚ï¿½ï¿½æ‚¤ï¿½ï¿½
     }
 
     private void Update()
@@ -117,7 +117,7 @@ public class Player : MonoBehaviour
         isDead = true;
 
         anim.SetTrigger("Death");
-        rb.velocity = Vector3.zero;
+        rb.linearVelocity = Vector3.zero;
 
         yield return new WaitForSeconds(2.0f);
 
@@ -127,10 +127,10 @@ public class Player : MonoBehaviour
 
     private void Respawn()
     {
-        DeathMarkerManager.Instance.CreateMarker(transform.position);
+        //DeathMarkerManager.Instance.CreateMarker(transform.position);
 
         PlayerHp = 1;
-        rb.velocity = Vector3.zero;
+        rb.linearVelocity = Vector3.zero;
         transform.position = respawnPoint;
     }
 

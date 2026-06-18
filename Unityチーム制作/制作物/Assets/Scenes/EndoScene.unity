@@ -266,11 +266,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 32699844}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bd24f8f3d12e28543ac9ea0e6322020b, type: 3}
+  m_Script: {fileID: 11500000, guid: b67dcf756bc7dd142996c0d02ba1fb57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraController
   player: {fileID: 688006512}
-  fadeAlpha: 0.05
+  fadeAlpha: 0.3
   fadeSpeed: 5
 --- !u!4 &39118776 stripped
 Transform:

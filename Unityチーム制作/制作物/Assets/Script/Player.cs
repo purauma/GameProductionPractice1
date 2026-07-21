@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -11,9 +11,9 @@ public class Player : MonoBehaviour
 
     [SerializeField] public int PlayerHp = 1;
 
-    [SerializeField] private float jumpBufferTime = 0.2f; 
+    [SerializeField] private float jumpBufferTime = 0.2f;
     private float jumpBufferCounter = 0f;
-
+    [SerializeField] private Transform cameraTransform;
 
     private Vector3 respawnPoint;
     private bool IsGround = false;
@@ -27,11 +27,17 @@ public class Player : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
+
         respawnPoint = transform.position;
         playerRenderer = GetComponentInChildren<Renderer>();
 
-        anim.applyRootMotion = false;
-        rb.freezeRotation = true; // �����œ|��Ȃ��悤��
+        if (anim != null)
+        {
+            anim.applyRootMotion = false;
+        }
+
+        rb.freezeRotation = true;
     }
 
     private void Update()
@@ -39,15 +45,13 @@ public class Player : MonoBehaviour
         if (isDead) return;
 
         Move();
-        Rotate();
-
-    
+  
         if (Input.GetKeyDown(KeyCode.Space))
         {
             jumpBufferCounter = jumpBufferTime;
         }
 
-      
+
         if (jumpBufferCounter > 0)
         {
             jumpBufferCounter -= Time.deltaTime;
@@ -56,29 +60,70 @@ public class Player : MonoBehaviour
         if (jumpBufferCounter > 0 && IsGround)
         {
             Jump();
-            jumpBufferCounter = 0; 
+            jumpBufferCounter = 0;
         }
     }
 
 
     private void Move()
     {
+        float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
-        Vector3 move = transform.forward * z * MoveSpeed * Time.deltaTime;
-        rb.MovePosition(rb.position + move);
 
-        anim.SetBool("Is Move", Mathf.Abs(z) > 0.1f);
+        Vector3 input =
+            new Vector3(x, 0, -z);
+
+
+        if (input.magnitude < 0.1f)
+        {
+            anim.SetBool("Is Move", false);
+            return;
+        }
+
+
+        // カメラの水平回転だけ取得
+        float cameraY =
+            cameraTransform.eulerAngles.y;
+
+
+        Quaternion cameraRotation =
+            Quaternion.Euler(
+                0,
+                cameraY,
+                0
+            );
+
+
+        // カメラ基準の移動方向
+        Vector3 move =
+            cameraRotation * input;
+
+
+        move.Normalize();
+
+
+        rb.MovePosition(
+      rb.position +
+      move * MoveSpeed * Time.deltaTime
+  );
+
+
+        // 移動方向へ向きを変える
+        Quaternion targetRotation =
+            Quaternion.LookRotation(move);
+
+
+        transform.rotation =
+            Quaternion.Slerp(
+                transform.rotation,
+                targetRotation,
+                RotationSpeed * Time.deltaTime
+            );
+
+
+        anim.SetBool("Is Move", true);
     }
-
-    private void Rotate()
-    {
-        float x = Input.GetAxis("Horizontal");
-
-        Quaternion deltaRot = Quaternion.Euler(0, x * RotationSpeed * Time.deltaTime, 0);
-        rb.MoveRotation(rb.rotation * deltaRot);
-    }
-
     private void Jump()
     {
         rb.AddForce(Vector3.up * 5f, ForceMode.Impulse);
@@ -127,7 +172,7 @@ public class Player : MonoBehaviour
 
     private void Respawn()
     {
-        //DeathMarkerManager.Instance.CreateMarker(transform.position);
+        DeathMarkerManager.Instance.CreateMarker(transform.position);
 
         PlayerHp = 1;
         rb.linearVelocity = Vector3.zero;

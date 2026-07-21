@@ -17,8 +17,13 @@ public class DeathMarkerManager : MonoBehaviour
 
     public void CreateMarker(Vector3 pos)
     {
-        // 新しいマーカー生成
-        GameObject obj = Instantiate(markerPrefab, pos, Quaternion.identity);
+        // X軸90度回転で生成
+        GameObject obj = Instantiate(
+            markerPrefab,
+            pos,
+            Quaternion.Euler(90f, 0f, 0f)
+        );
+
         markers.Enqueue(obj);
 
         // 30個を超えたら古いものから削除

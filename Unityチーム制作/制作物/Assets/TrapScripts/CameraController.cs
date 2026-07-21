@@ -1,107 +1,240 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class CameraController : MonoBehaviour
 {
+    [Header("追従")]
     public Transform player;
-    public float fadeAlpha = 0.3f;
-    public float fadeSpeed = 5f;
+    public Transform cameraTarget;
 
-    private List<Renderer> currentObstacles = new List<Renderer>();
-    private Dictionary<Renderer, Material[]> originalMaterials = new Dictionary<Renderer, Material[]>();
+    [SerializeField] float distance = 6f;
+    [SerializeField] float height = 2.5f;
+    [SerializeField] float followSpeed = 10f;
 
-    void Update()
+
+
+    [Header("回転")]
+    [SerializeField] float lookSpeed = 180f;
+    [SerializeField] float smooth = 8f;
+
+    [SerializeField] float minPitch = -25f;
+    [SerializeField] float maxPitch = 55f;
+
+
+    float yaw;
+    float pitch;
+
+
+
+    [Header("壁透明化")]
+    public float fadeAlpha = 0.25f;
+    public float fadeSpeed = 8f;
+
+
+    List<Renderer> walls =
+        new List<Renderer>();
+
+
+
+    Dictionary<Renderer, Material[]> save =
+        new Dictionary<Renderer, Material[]>();
+
+
+
+
+    void Start()
     {
-        HandleObstacles();
+        Vector3 a =
+            transform.eulerAngles;
+
+        yaw = a.y;
+        pitch = a.x;
     }
 
-    void HandleObstacles()
+
+
+    void LateUpdate()
     {
-        //まず前回の透明化を解除
-        foreach (var r in currentObstacles)
+        RotateCamera();
+
+        Follow();
+
+        WallFade();
+    }
+
+
+
+
+
+    void RotateCamera()
+    {
+        float x =
+            Input.GetAxis("RightStickX");
+
+        float y =
+            Input.GetAxis("RightStickY");
+
+
+        yaw +=
+            x * lookSpeed * Time.deltaTime;
+
+
+        pitch -=
+            y * lookSpeed * Time.deltaTime;
+
+
+        pitch =
+            Mathf.Clamp(
+                pitch,
+                minPitch,
+                maxPitch
+            );
+    }
+
+
+
+
+    void Follow()
+    {
+        if (player == null)
+            return;
+
+
+        Quaternion rot =
+            Quaternion.Euler(
+                pitch,
+                yaw,
+                0
+            );
+
+
+        Vector3 offset =
+            rot * new Vector3(
+                0,
+                height,
+                -distance
+            );
+
+
+        Vector3 target =
+            player.position
+            + Vector3.up * 1.2f;
+
+
+
+        transform.position =
+            Vector3.Lerp(
+                transform.position,
+                target + offset,
+                followSpeed * Time.deltaTime
+            );
+
+
+
+        transform.rotation =
+            Quaternion.Lerp(
+                transform.rotation,
+                rot,
+                smooth * Time.deltaTime
+            );
+    }
+
+
+
+
+
+
+    void WallFade()
+    {
+        foreach (Renderer r in walls)
         {
-            RestoreMaterial(r);
+            Restore(r);
         }
-        currentObstacles.Clear();
 
-        //Raycast で遮蔽物を検出
-        Vector3 dir = player.position - transform.position;
-        float dist = Vector3.Distance(player.position, transform.position);
+        walls.Clear();
 
-        RaycastHit[] hits = Physics.RaycastAll(transform.position, dir, dist);
 
-        foreach (var hit in hits)
+
+        Vector3 dir =
+            player.position
+            - transform.position;
+
+
+        RaycastHit[] hits =
+            Physics.RaycastAll(
+                transform.position,
+                dir.normalized,
+                dir.magnitude
+            );
+
+
+
+        foreach (RaycastHit hit in hits)
         {
-            //  Wall 以外なら無視
-            if (!hit.collider.CompareTag("Wall")) continue;
+            if (hit.collider.CompareTag("Wall"))
+            {
+                Renderer r =
+                    hit.collider.GetComponent<Renderer>();
 
-            Renderer rend = hit.collider.GetComponent<Renderer>();
-            if (rend == null) continue;
 
-            if (hit.collider.transform == player) continue;
-
-            // 透明化
-            FadeMaterial(rend);
-            currentObstacles.Add(rend);
+                if (r)
+                {
+                    Fade(r);
+                    walls.Add(r);
+                }
+            }
         }
-
     }
 
-    void FadeMaterial(Renderer rend)
+
+
+
+
+    void Fade(Renderer r)
     {
-        if (!originalMaterials.ContainsKey(rend))
+        if (!save.ContainsKey(r))
+            save.Add(
+                r,
+                r.materials
+            );
+
+
+        foreach (Material m in r.materials)
         {
-            originalMaterials[rend] = rend.materials;
-        }
+            Color c = m.color;
 
-        foreach (var mat in rend.materials)
+            c.a =
+                Mathf.Lerp(
+                    c.a,
+                    fadeAlpha,
+                    Time.deltaTime * fadeSpeed
+                );
+
+            m.color = c;
+
+            m.SetFloat("_Surface", 1);
+            m.renderQueue = 3000;
+        }
+    }
+
+
+
+
+    void Restore(Renderer r)
+    {
+        foreach (Material m in r.materials)
         {
-            SetMaterialTransparent(mat);
+            Color c = m.color;
 
-            Color c = mat.color;
-            c.a = Mathf.Lerp(c.a, fadeAlpha, Time.deltaTime * fadeSpeed);
-            mat.color = c;
+            c.a =
+                Mathf.Lerp(
+                    c.a,
+                    1,
+                    Time.deltaTime * fadeSpeed
+                );
+
+            m.color = c;
         }
     }
-
-    void RestoreMaterial(Renderer rend)
-    {
-        if (!originalMaterials.ContainsKey(rend)) return;
-
-        Material[] mats = rend.materials;
-        foreach (var mat in mats)
-        {
-            SetMaterialOpaque(mat);
-
-            Color c = mat.color;
-            c.a = Mathf.Lerp(c.a, 1f, Time.deltaTime * fadeSpeed);
-            mat.color = c;
-        }
-    }
-
-    // 透明モードへ
-    void SetMaterialTransparent(Material mat)
-    {
-        mat.SetFloat("_Surface", 1); // Transparent
-        mat.SetFloat("_Blend", 0);   // Alpha blending
-        mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        mat.SetFloat("_ZWrite", 0);  // ZWrite Off
-
-        mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-    }
-
-
-    // 不透明モードへ
-    void SetMaterialOpaque(Material mat)
-    {
-        mat.SetFloat("_Surface", 0); // Opaque
-        mat.SetFloat("_Blend", 0);
-        mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
-        mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.Zero);
-        mat.SetFloat("_ZWrite", 1);  // ZWrite On
-
-        mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Geometry;
-    }
-
 }

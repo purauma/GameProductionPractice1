@@ -45,8 +45,8 @@ public class Player : MonoBehaviour
         if (isDead) return;
 
         Move();
-  
-        if (Input.GetKeyDown(KeyCode.Space))
+
+        if (Input.GetButtonDown("Jump"))
         {
             jumpBufferCounter = jumpBufferTime;
         }
@@ -104,9 +104,9 @@ public class Player : MonoBehaviour
 
 
         rb.MovePosition(
-      rb.position +
-      move * MoveSpeed * Time.deltaTime
-  );
+            rb.position +
+            move * MoveSpeed * Time.deltaTime
+        );
 
 
         // 移動方向へ向きを変える
@@ -124,6 +124,8 @@ public class Player : MonoBehaviour
 
         anim.SetBool("Is Move", true);
     }
+
+
     private void Jump()
     {
         rb.AddForce(Vector3.up * 5f, ForceMode.Impulse);

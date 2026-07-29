@@ -20,8 +20,8 @@ public class Player : MonoBehaviour
     private bool isInvincible = false;
     private float invincibleTime = 1.0f;
     private Renderer playerRenderer;
-
     private bool isDead = false;
+
 
     private void Awake()
     {
@@ -40,11 +40,14 @@ public class Player : MonoBehaviour
         rb.freezeRotation = true;
     }
 
+    private void Start()
+    {
+      IsGround = true;
+    }
+
     private void Update()
     {
         if (isDead) return;
-
-        Move();
 
         if (Input.GetButtonDown("Jump"))
         {
@@ -64,65 +67,44 @@ public class Player : MonoBehaviour
         }
     }
 
+    private void FixedUpdate()
+    {
+        Move();
+    }
+
 
     private void Move()
     {
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
+        Vector3 input = new Vector3(x, 0, -z);
 
-        Vector3 input =
-            new Vector3(x, 0, -z);
+        float cameraY = cameraTransform.eulerAngles.y;
+        Quaternion cameraRotation = Quaternion.Euler(0, cameraY, 0);
 
+        Vector3 targetVelocity = Vector3.zero;
 
-        if (input.magnitude < 0.1f)
+        if (input.magnitude >= 0.1f)
         {
-            anim.SetBool("Is Move", false);
-            return;
-        }
+            input.Normalize();
+            targetVelocity = cameraRotation * input * MoveSpeed;
 
-
-        // カメラの水平回転だけ取得
-        float cameraY =
-            cameraTransform.eulerAngles.y;
-
-
-        Quaternion cameraRotation =
-            Quaternion.Euler(
-                0,
-                cameraY,
-                0
-            );
-
-
-        // カメラ基準の移動方向
-        Vector3 move =
-            cameraRotation * input;
-
-
-        move.Normalize();
-
-
-        rb.MovePosition(
-            rb.position +
-            move * MoveSpeed * Time.deltaTime
-        );
-
-
-        // 移動方向へ向きを変える
-        Quaternion targetRotation =
-            Quaternion.LookRotation(move);
-
-
-        transform.rotation =
-            Quaternion.Slerp(
+            Quaternion targetRotation = Quaternion.LookRotation(targetVelocity);
+            transform.rotation = Quaternion.Slerp(
                 transform.rotation,
                 targetRotation,
                 RotationSpeed * Time.deltaTime
             );
 
+            anim.SetBool("Is Move", true);
+        }
+        else
+        {
+            anim.SetBool("Is Move", false);
+        }
 
-        anim.SetBool("Is Move", true);
+        rb.MovePosition(rb.position + targetVelocity * Time.fixedDeltaTime);
     }
 
 
@@ -152,13 +134,14 @@ public class Player : MonoBehaviour
         {
             IsGround = true;
         }
-
+       
         if (collision.gameObject.CompareTag("Take Damage"))
         {
             TakeDamage(1);
         }
     }
 
+  
     private IEnumerator DeathProcess()
     {
         isDead = true;
@@ -198,4 +181,8 @@ public class Player : MonoBehaviour
         playerRenderer.enabled = true;
         isInvincible = false;
     }
+
+
+
+
 }

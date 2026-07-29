@@ -9,6 +9,7 @@ TagManager:
   - Take Damage
   - TrapFloor
   - Wall
+  - Ice
   layers:
   - Default
   - TransparentFX

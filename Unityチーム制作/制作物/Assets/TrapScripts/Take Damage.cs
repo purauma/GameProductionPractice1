@@ -2,15 +2,18 @@ using UnityEngine;
 
 public class TakeDamage : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    [SerializeField] private int damage = 1;
 
-    // Update is called once per frame
-    void Update()
+    private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        
+        if (hit.gameObject.CompareTag("Goal"))
+        {
+            Player player = hit.gameObject.GetComponent<Player>();
+
+            if (player != null)
+            {
+                player.TakeDamage(damage);
+            }
+        }
     }
 }

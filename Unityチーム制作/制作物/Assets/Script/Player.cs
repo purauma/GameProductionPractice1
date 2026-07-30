@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
@@ -134,10 +135,16 @@ public class Player : MonoBehaviour
         {
             IsGround = true;
         }
-        if (collision.gameObject.CompareTag("Take Damage"))
+        if (collision.gameObject.CompareTag("Floor"))
         {
-            TakeDamage(1);
+            IsGround = true;
         }
+
+        if (collision.gameObject.CompareTag("Goal"))
+        {
+            SceneManager.LoadScene("EndScene");
+        }
+
     }
 
   

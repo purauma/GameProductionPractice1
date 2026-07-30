@@ -14,7 +14,6 @@ public class Player : MonoBehaviour
     [SerializeField] private float jumpBufferTime = 0.2f;
     private float jumpBufferCounter = 0f;
     [SerializeField] private Transform cameraTransform;
-
     private Vector3 respawnPoint;
     private bool IsGround = false;
     private bool isInvincible = false;
@@ -135,7 +134,6 @@ public class Player : MonoBehaviour
         {
             IsGround = true;
         }
-       
         if (collision.gameObject.CompareTag("Take Damage"))
         {
             TakeDamage(1);

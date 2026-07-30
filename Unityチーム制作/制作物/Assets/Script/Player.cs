@@ -69,6 +69,7 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (isDead) return;
         Move();
     }
 

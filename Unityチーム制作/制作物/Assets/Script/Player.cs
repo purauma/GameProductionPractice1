@@ -4,7 +4,6 @@ using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
-    private Rigidbody rb;
     private Animator anim;
 
     [SerializeField] private float MoveSpeed = 3.0f;
@@ -14,41 +13,55 @@ public class Player : MonoBehaviour
 
     [SerializeField] private float jumpBufferTime = 0.2f;
     private float jumpBufferCounter = 0f;
+
     [SerializeField] private Transform cameraTransform;
+
     private Vector3 respawnPoint;
+
     private bool IsGround = false;
     private bool isInvincible = false;
-    private float invincibleTime = 1.0f;
-    private Renderer playerRenderer;
     private bool isDead = false;
+
+    private float invincibleTime = 1.0f;
+
+    private Renderer playerRenderer;
+
+    private CharacterController controller;
+
+    // CharacterController用
+    private float gravity = -20f;
+    private float jumpPower = 7f;
+    private float verticalVelocity = 0f;
 
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody>();
+        controller = GetComponent<CharacterController>();
         anim = GetComponent<Animator>();
-        rb.interpolation = RigidbodyInterpolation.Interpolate;
 
         respawnPoint = transform.position;
+
         playerRenderer = GetComponentInChildren<Renderer>();
 
         if (anim != null)
         {
             anim.applyRootMotion = false;
         }
-
-        rb.freezeRotation = true;
     }
+
 
     private void Start()
     {
-      IsGround = true;
+        IsGround = true;
     }
+
 
     private void Update()
     {
         if (isDead) return;
 
+
+        // ジャンプ入力受付
         if (Input.GetButtonDown("Jump"))
         {
             jumpBufferCounter = jumpBufferTime;
@@ -60,43 +73,76 @@ public class Player : MonoBehaviour
             jumpBufferCounter -= Time.deltaTime;
         }
 
+
+        // 接地判定
+        IsGround = controller.isGrounded;
+
+
+        if (IsGround && verticalVelocity < 0)
+        {
+            verticalVelocity = -1f;
+        }
+
+
+        // ジャンプ
         if (jumpBufferCounter > 0 && IsGround)
         {
             Jump();
             jumpBufferCounter = 0;
         }
+
+
+        // 重力
+        verticalVelocity += gravity * Time.deltaTime;
+
+
+        Vector3 move = Move();
+
+        move.y = verticalVelocity;
+
+        controller.Move(move * Time.deltaTime);
     }
 
-    private void FixedUpdate()
-    {
-        if (isDead) return;
-        Move();
-    }
 
 
-    private void Move()
+    private Vector3 Move()
     {
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
+        float x = Input.GetAxisRaw("Horizontal");
+        float z = Input.GetAxisRaw("Vertical");
+
 
         Vector3 input = new Vector3(x, 0, -z);
 
-        float cameraY = cameraTransform.eulerAngles.y;
-        Quaternion cameraRotation = Quaternion.Euler(0, cameraY, 0);
 
         Vector3 targetVelocity = Vector3.zero;
+
+
+        float cameraY = cameraTransform.eulerAngles.y;
+
+        Quaternion cameraRotation =
+            Quaternion.Euler(0, cameraY, 0);
+
 
         if (input.magnitude >= 0.1f)
         {
             input.Normalize();
-            targetVelocity = cameraRotation * input * MoveSpeed;
 
-            Quaternion targetRotation = Quaternion.LookRotation(targetVelocity);
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                targetRotation,
-                RotationSpeed * Time.deltaTime
-            );
+
+            targetVelocity =
+                cameraRotation * input * MoveSpeed;
+
+
+            Quaternion targetRotation =
+                Quaternion.LookRotation(targetVelocity);
+
+
+            transform.rotation =
+                Quaternion.Slerp(
+                    transform.rotation,
+                    targetRotation,
+                    RotationSpeed * Time.deltaTime
+                );
+
 
             anim.SetBool("Is Move", true);
         }
@@ -105,23 +151,30 @@ public class Player : MonoBehaviour
             anim.SetBool("Is Move", false);
         }
 
-        rb.MovePosition(rb.position + targetVelocity * Time.fixedDeltaTime);
+
+        return targetVelocity;
     }
+
 
 
     private void Jump()
     {
-        rb.AddForce(Vector3.up * 5f, ForceMode.Impulse);
+        verticalVelocity = jumpPower;
+
         anim.SetTrigger("Jump");
-        IsGround = false;
     }
+
+
 
     public void TakeDamage(int damage)
     {
         if (isInvincible || isDead) return;
 
+
         PlayerHp -= damage;
+
         StartCoroutine(DamageBlink());
+
 
         if (PlayerHp <= 0)
         {
@@ -129,66 +182,81 @@ public class Player : MonoBehaviour
         }
     }
 
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            IsGround = true;
-        }
-        if (collision.gameObject.CompareTag("Floor"))
-        {
-            IsGround = true;
-        }
 
-        if (collision.gameObject.CompareTag("Goal"))
+
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        if (hit.gameObject.CompareTag("Goal"))
         {
             SceneManager.LoadScene("EndScene");
         }
-
     }
 
-  
+
+
     private IEnumerator DeathProcess()
     {
         isDead = true;
 
         anim.SetTrigger("Death");
-        rb.linearVelocity = Vector3.zero;
+
+        verticalVelocity = 0;
+
 
         yield return new WaitForSeconds(2.0f);
 
+
         Respawn();
+
         isDead = false;
     }
+
+
 
     private void Respawn()
     {
         DeathMarkerManager.Instance.CreateMarker(transform.position);
 
+
         PlayerHp = 1;
-        rb.linearVelocity = Vector3.zero;
+
+        controller.enabled = false;
+
         transform.position = respawnPoint;
+
+        controller.enabled = true;
+
+
+        verticalVelocity = 0;
     }
+
+
 
     private IEnumerator DamageBlink()
     {
         isInvincible = true;
 
+
         float blinkInterval = 0.1f;
+
         float timer = 0f;
+
 
         while (timer < invincibleTime)
         {
-            playerRenderer.enabled = !playerRenderer.enabled;
+            playerRenderer.enabled =
+                !playerRenderer.enabled;
+
+
             yield return new WaitForSeconds(blinkInterval);
+
+
             timer += blinkInterval;
         }
 
+
         playerRenderer.enabled = true;
+
         isInvincible = false;
     }
-
-
-
-
 }

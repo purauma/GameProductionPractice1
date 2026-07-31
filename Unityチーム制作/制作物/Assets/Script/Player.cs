@@ -13,7 +13,7 @@ public class Player : MonoBehaviour
 
     [SerializeField] private float jumpBufferTime = 0.2f;
     private float jumpBufferCounter = 0f;
-
+    [SerializeField] private float fallDeathY = -10f;
     [SerializeField] private Transform cameraTransform;
 
     private Vector3 respawnPoint;
@@ -27,11 +27,13 @@ public class Player : MonoBehaviour
     private Renderer playerRenderer;
 
     private CharacterController controller;
+    private Rigidbody rb;
 
     // CharacterController用
-    private float gravity = -20f;
+    private float gravity = -15f;
     private float jumpPower = 7f;
     private float verticalVelocity = 0f;
+    private Vector3 launchVelocity = Vector3.zero;
 
 
     private void Awake()
@@ -43,6 +45,8 @@ public class Player : MonoBehaviour
 
         playerRenderer = GetComponentInChildren<Renderer>();
 
+        rb = GetComponent<Rigidbody>();
+      
         if (anim != null)
         {
             anim.applyRootMotion = false;
@@ -58,49 +62,70 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        if (isDead) return;
-
-
-        // ジャンプ入力受付
-        if (Input.GetButtonDown("Jump"))
-        {
-            jumpBufferCounter = jumpBufferTime;
-        }
-
-
-        if (jumpBufferCounter > 0)
-        {
-            jumpBufferCounter -= Time.deltaTime;
-        }
-
 
         // 接地判定
         IsGround = controller.isGrounded;
-
 
         if (IsGround && verticalVelocity < 0)
         {
             verticalVelocity = -1f;
         }
 
+        Vector3 move = Vector3.zero;
 
-        // ジャンプ
-        if (jumpBufferCounter > 0 && IsGround)
+        if (!isDead)
         {
-            Jump();
-            jumpBufferCounter = 0;
+            // ジャンプ入力受付
+            if (Input.GetButtonDown("Jump"))
+            {
+                jumpBufferCounter = jumpBufferTime;
+            }
+
+
+            if (jumpBufferCounter > 0)
+            {
+                jumpBufferCounter -= Time.deltaTime;
+            }
+
+            // ジャンプ
+            if (jumpBufferCounter > 0 && IsGround)
+            {
+                Jump();
+                jumpBufferCounter = 0;
+            }
+
+
+            move = Move();
+
         }
+
 
 
         // 重力
         verticalVelocity += gravity * Time.deltaTime;
 
-
-        Vector3 move = Move();
+        // 吹っ飛び速度を加算
+        move += launchVelocity;
 
         move.y = verticalVelocity;
 
         controller.Move(move * Time.deltaTime);
+
+
+
+        // 吹っ飛び速度を徐々に減らす
+        launchVelocity = Vector3.Lerp(
+            launchVelocity,
+            Vector3.zero,
+            8f * Time.deltaTime);
+
+        // 落下したらリスポーン
+        if (!isDead && transform.position.y <= fallDeathY)
+        {
+            StartCoroutine(DeathProcess());
+        }
+
+
     }
 
 
@@ -109,7 +134,7 @@ public class Player : MonoBehaviour
     {
         float x = Input.GetAxisRaw("Horizontal");
         float z = Input.GetAxisRaw("Vertical");
-
+        //Debug.Log($"x={x} z={z}");
 
         Vector3 input = new Vector3(x, 0, -z);
 
@@ -168,13 +193,19 @@ public class Player : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
-        if (isInvincible || isDead) return;
+        Debug.Log("ダメージ処理開始");
 
+        if (isInvincible || isDead)
+        {
+            Debug.Log("無敵または死亡中");
+            return;
+        }
 
         PlayerHp -= damage;
 
-        StartCoroutine(DamageBlink());
+        Debug.Log("HP:" + PlayerHp);
 
+        StartCoroutine(DamageBlink());
 
         if (PlayerHp <= 0)
         {
@@ -190,9 +221,49 @@ public class Player : MonoBehaviour
         {
             SceneManager.LoadScene("EndScene");
         }
+
+        if (hit.gameObject.CompareTag("Take Damage"))
+        {
+            TakeDamage(1);
+        }
+
+        if (hit.gameObject.CompareTag("FallingFloor"))
+        {
+            FallingFloor floor = hit.gameObject.GetComponent<FallingFloor>();
+            if (floor != null)
+            {
+                floor.TriggerFall();
+            }
+        }
     }
+    
+    private void OnTriggerEnter(Collider other)
+    {
+        Debug.Log("Trigger Enter: " + other.gameObject.name + " / Tag: " + other.tag);
 
+        if (other.CompareTag("Goal"))
+        {
+            SceneManager.LoadScene("EndScene");
+        }
 
+        if (other.CompareTag("Take Damage"))
+        {
+            TakeDamage(1);
+        }
+
+        if (other.CompareTag("CheckPoint"))
+        {
+            respawnPoint = other.transform.position + new Vector3(0, 1.0f, -2.0f);
+
+            Debug.Log("リスポーン地点更新");
+        }
+
+        if (other.CompareTag("BounceTrap"))
+        {
+            Debug.Log("Bounce Trap Hit!");
+            Launch(Vector3.up, 30f);
+        }
+    }
 
     private IEnumerator DeathProcess()
     {
@@ -203,10 +274,17 @@ public class Player : MonoBehaviour
         verticalVelocity = 0;
 
 
-        yield return new WaitForSeconds(2.0f);
+        yield return new WaitForSeconds(1.0f);
 
 
         Respawn();
+
+
+        if (StageResetManager.Instance != null)
+        {
+            StageResetManager.Instance.ResetStage();
+        }
+
 
         isDead = false;
     }
@@ -215,8 +293,9 @@ public class Player : MonoBehaviour
 
     private void Respawn()
     {
-        DeathMarkerManager.Instance.CreateMarker(transform.position);
+        Debug.Log("リスポーン実行");
 
+        DeathMarkerManager.Instance.CreateMarker(transform.position);
 
         PlayerHp = 1;
 
@@ -226,8 +305,14 @@ public class Player : MonoBehaviour
 
         controller.enabled = true;
 
-
         verticalVelocity = 0;
+        anim.ResetTrigger("Death");
+        anim.Play("Idle", 0, 0f);
+    }
+
+    public void SetRespawnPoint(Vector3 point)
+    {
+        respawnPoint = point;
     }
 
 
@@ -258,5 +343,19 @@ public class Player : MonoBehaviour
         playerRenderer.enabled = true;
 
         isInvincible = false;
+    }
+
+    public void Launch(Vector3 direction, float power)
+    {
+        direction.Normalize();
+
+        // 横方向
+        Vector3 horizontal = new Vector3(direction.x, 0, direction.z);
+
+        // 飛ぶ速度を一時的に保存
+        launchVelocity = horizontal * power;
+
+        // 縦方向
+        verticalVelocity = direction.y * power;
     }
 }

@@ -196,6 +196,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -264,10 +265,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1135920843}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 089616a289fec464c85dabf9e651cee4, type: 3}
+  m_Script: {fileID: 11500000, guid: da896ed6926b99746bd1019692886141, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TitleManager
-  anyButtonText: {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::TitileSceneManager
+  anyButtonText: {fileID: 1372151430}
   blinkSpeed: 2
 --- !u!1 &1191886079
 GameObject:
@@ -406,8 +407,8 @@ MonoBehaviour:
 
 '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: f0042788cb0921a4fb740497e219f0fa, type: 2}
-  m_sharedMaterial: {fileID: 6151632586807527185, guid: f0042788cb0921a4fb740497e219f0fa, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -442,6 +443,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -621,8 +623,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u958B\u767A\u8005\u306F\u5632\u7B11\u3063\u3066\u3044\u307E\u3059\n"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: f0042788cb0921a4fb740497e219f0fa, type: 2}
-  m_sharedMaterial: {fileID: 6151632586807527185, guid: f0042788cb0921a4fb740497e219f0fa, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -657,6 +659,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -866,6 +869,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -952,14 +956,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2145394619}
   m_Enabled: 1
-  serializedVersion: 11
+  serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
-  m_CookieSize: 10
+  m_CookieSize2D: {x: 10, y: 10}
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
@@ -1004,7 +1008,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1

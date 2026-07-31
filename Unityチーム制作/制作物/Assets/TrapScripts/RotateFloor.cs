@@ -1,54 +1,59 @@
 using UnityEngine;
+using System.Collections;
 
-public class RotateFloor: MonoBehaviour
+public class RotateFloor : MonoBehaviour
 {
-    public float interval = 3f;   // âΩïbÇ≤Ç∆Ç…îΩì]Ç∑ÇÈÇ©
-    public float rotateTime = 1f; // âÒì]Ç…Ç©ÇØÇÈéûä‘
+    public float interval = 3f;
+    public float rotateTime = 1f;
 
-    private bool flipped = false;
     private bool rotating = false;
+
 
     void Start()
     {
-        InvokeRepeating("Flip", interval, interval);
+        InvokeRepeating(nameof(Flip), interval, interval);
     }
+
 
     void Flip()
     {
         if (!rotating)
         {
-            flipped = !flipped;
             StartCoroutine(FlipFloor());
         }
     }
 
-    System.Collections.IEnumerator FlipFloor()
+
+    IEnumerator FlipFloor()
     {
         rotating = true;
 
-        Quaternion start = transform.rotation;
-        Quaternion end;
 
-        if (flipped)
-            end = Quaternion.Euler(180, 0, 0);
-        else
-            end = Quaternion.Euler(0, 0, 0);
+        Quaternion start = transform.rotation;
+
+        // åªç›ÇÃäpìxÇ©ÇÁXé≤180ìxâÒì]
+        Quaternion end = start * Quaternion.Euler(180, 0, 0);
+
 
         float time = 0;
 
         while (time < rotateTime)
         {
             time += Time.deltaTime;
-            transform.rotation = Quaternion.Slerp(
-                start,
-                end,
-                time / rotateTime
-            );
+
+            transform.rotation =
+                Quaternion.Slerp(
+                    start,
+                    end,
+                    time / rotateTime
+                );
 
             yield return null;
         }
 
+
         transform.rotation = end;
+
         rotating = false;
     }
 }

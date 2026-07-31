@@ -5,7 +5,7 @@ public class EnemyMove : MonoBehaviour
     public float moveDistance = 3f;
     public float speed = 2f;
 
-    public Vector3 moveDirection = Vector3.right; // ˆÚ“®•ûŒü
+    public Vector3 moveDirection = Vector3.forward; // ˆÚ“®•ûŒü
 
     private Vector3 startPos;
     private int direction = 1;
@@ -13,6 +13,7 @@ public class EnemyMove : MonoBehaviour
     void Start()
     {
         startPos = transform.position;
+        moveDirection = Vector3.forward; // ZŽ²•ûŒü
         moveDirection.Normalize();
     }
 

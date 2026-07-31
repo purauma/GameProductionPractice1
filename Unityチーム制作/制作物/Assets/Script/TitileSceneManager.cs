@@ -41,6 +41,6 @@ public class TitileSceneManager : MonoBehaviour
     private void ChangeScene()
     {
         // プレイシーンへ遷移
-        SceneManager.LoadScene("EndoScene");
+        SceneManager.LoadScene("PlayScene");
     }
 }

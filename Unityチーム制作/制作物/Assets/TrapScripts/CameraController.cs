@@ -28,7 +28,7 @@ public class CameraController : MonoBehaviour
 
 
     [Header("•Ç“§–¾‰»")]
-    public float fadeAlpha = 0.25f;
+    public float fadeAlpha = 0.0f;
     public float fadeSpeed = 8f;
 
 
